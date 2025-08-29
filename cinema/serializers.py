@@ -8,40 +8,38 @@ class MovieSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=255)
     description = serializers.CharField()
     duration = serializers.IntegerField()
-    actors = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True
+
+    actors = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Actor.objects.all()
     )
-    genres = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True
+    genres = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Genre.objects.all()
     )
 
     def create(self, validated_data):
-        actor_ids = validated_data.pop("actors", [])
-        genre_ids = validated_data.pop("genres", [])
-
+        actors = validated_data.pop("actors", [])
+        genres = validated_data.pop("genres", [])
         movie = Movie.objects.create(**validated_data)
-        movie.actors.set(actor_ids)
-        movie.genres.set(genre_ids)
+        movie.actors.set(actors)
+        movie.genres.set(genres)
         return movie
 
     def update(self, instance, validated_data):
-        actor_ids = validated_data.pop("actors", None)
-        genre_ids = validated_data.pop("genres", None)
+        actors = validated_data.pop("actors", None)
+        genres = validated_data.pop("genres", None)
 
         instance.title = validated_data.get("title", instance.title)
         instance.description = validated_data.get(
-            "description", instance.description
+            "description",
+            instance.description
         )
         instance.duration = validated_data.get("duration", instance.duration)
-
         instance.save()
 
-        if actor_ids is not None:
-            instance.actors.set(actor_ids)
-        if genre_ids is not None:
-            instance.genres.set(genre_ids)
+        if actors is not None:
+            instance.actors.set(actors)
+        if genres is not None:
+            instance.genres.set(genres)
 
         return instance
 
